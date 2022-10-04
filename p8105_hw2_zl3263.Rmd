@@ -3,16 +3,34 @@ title: "p8105_hw2_zl3263"
 output: github_document
 date: "2022-10-03"
 ---
-
+#### package import
 ```{r }
-
+library(tidyverse)
 ```
 
-
+### Problem 1
 
 ```{r }
+NYC_subway = read_csv("Datasets/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
+  janitor::clean_names()
+NYC_subway_selected_cols = select(NYC_subway,colnames(NYC_subway)[2:18],vending,ada)%>%
+  mutate(
+    entry = entry=="YES" #Only yes/no in this column
+  )%>%
+  unique()
+
+NYC_subway_selected_cols
+colSums(is.na(NYC_subway_selected_cols))
 
 ```
+For the cleaning, I firstly clean the variable names and then extracted the required columns with `select()` and convert the enry variable to boolean value with `mutate()`. Then I removed duplicated rows. I checked the missing value through `colSums()` and find that there is no missing value except in routes information.
+
+This dataset contains following variables `r colnames(NYC_subway_selected_cols)` after cleaning. And it is `r dim(NYC_subway_selected_cols)`(rows x columns). Considering the previous statement, I think the data is tidy.
+
+
++ There are `r nrow(unique(select(NYC_subway_selected_cols,line,station_name)))` distinct stations
++ `r sum(unique(select(NYC_subway_selected_cols,line,station_name,ada))$ada)` stations are ADA compliant.
++ The proportion is `r sum(NYC_subway_selected_cols$vending=="YES")`:`r sum(NYC_subway_selected_cols$vending=="NO")` equals to `r sum(NYC_subway_selected_cols$vending=="YES")/(sum(NYC_subway_selected_cols$vending=="NO")+sum(NYC_subway_selected_cols$vending=="YES"))`
 
 
 ```{r }
