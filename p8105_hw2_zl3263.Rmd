@@ -6,6 +6,7 @@ date: "2022-10-03"
 #### package import
 ```{r }
 library(tidyverse)
+library(readxl)
 ```
 
 ### Problem 1
@@ -32,9 +33,50 @@ This dataset contains following variables `r colnames(NYC_subway_selected_cols)`
 + `r sum(unique(select(NYC_subway_selected_cols,line,station_name,ada))$ada)` stations are ADA compliant.
 + The proportion is `r sum(NYC_subway_selected_cols$vending=="YES")`:`r sum(NYC_subway_selected_cols$vending=="NO")` equals to `r sum(NYC_subway_selected_cols$vending=="YES")/(sum(NYC_subway_selected_cols$vending=="NO")+sum(NYC_subway_selected_cols$vending=="YES"))`
 
+### Problem 2
 
+#### load and clean the data
 ```{r }
+MrTrashWheel = read_xlsx('Datasets/Trash＿Wheel＿Collection.xlsx', 
+                                  range ="Mr. Trash Wheel!A2:N535")%>%
+  janitor::clean_names()
 
+MrTrashWheel_cleaned = MrTrashWheel[is.na(MrTrashWheel$dumpster)==FALSE & MrTrashWheel$dumpster!='Grand Total',]%>%
+  mutate(
+    sports_balls = as.integer(sports_balls)
+  )
+#
+ProfessorTrashWheel = read_xlsx('Datasets/Trash＿Wheel＿Collection.xlsx', 
+                                  range ="Professor Trash Wheel!A2:N117")%>%
+  janitor::clean_names()
+
+ProfessorTrashWheel_cleaned = ProfessorTrashWheel[is.na(ProfessorTrashWheel$dumpster)==FALSE,]%>%
+  mutate(
+    sports_balls = as.integer(sports_balls)
+  )
+
+MrTrashWheel_cleaned
+ProfessorTrashWheel_cleaned
 ```
+#### combine the two sets
+```{r}
+MrTrashWheel_cleaned$whell_type = "MrTrash"
+ProfessorTrashWheel_cleaned$whell_type = "ProfessorTrash"
+ProfessorTrashWheel_cleaned$dumpster =as.character(ProfessorTrashWheel_cleaned$dumpster) 
+
+cTrashWhell = bind_rows(MrTrashWheel_cleaned,ProfessorTrashWheel_cleaned)
+cTrashWhell
+```
+There are `r nrow(cTrashWhell)` observations with `r ncol(cTrashWhell)` variables in this combined dataset. 
+
+The key variables contains dumpster, time mark, trash types, whell type etc. The total weight of trash collected by the professor trash wheel is `r sum(cTrashWhell[cTrashWhell$whell_type == 'ProfessorTrash',]$weight_tons)` and total number of sports balls collected by Mr. Trash Wheel in 2020 is `r sum(cTrashWhell[cTrashWhell$whell_type == 'MrTrash' & cTrashWhell$year ==2020 ,]$sports_balls)`.
+
+
+
+
+
+
+
+
 
 
