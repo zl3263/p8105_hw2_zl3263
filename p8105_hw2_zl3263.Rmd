@@ -38,7 +38,7 @@ This dataset contains following variables `r colnames(NYC_subway_selected_cols)`
 #### load and clean the data
 ```{r }
 MrTrashWheel = read_xlsx('Datasets/Trash＿Wheel＿Collection.xlsx', 
-                                  range ="Mr. Trash Wheel!A2:N535")%>%
+                                  range ="Mr. Trash Wheel!A2:N550")%>%
   janitor::clean_names()
 
 MrTrashWheel_cleaned = MrTrashWheel[is.na(MrTrashWheel$dumpster)==FALSE & MrTrashWheel$dumpster!='Grand Total',]%>%
@@ -47,13 +47,10 @@ MrTrashWheel_cleaned = MrTrashWheel[is.na(MrTrashWheel$dumpster)==FALSE & MrTras
   )
 #
 ProfessorTrashWheel = read_xlsx('Datasets/Trash＿Wheel＿Collection.xlsx', 
-                                  range ="Professor Trash Wheel!A2:N117")%>%
+                                  range ="Professor Trash Wheel!A2:M97")%>%
   janitor::clean_names()
 
-ProfessorTrashWheel_cleaned = ProfessorTrashWheel[is.na(ProfessorTrashWheel$dumpster)==FALSE,]%>%
-  mutate(
-    sports_balls = as.integer(sports_balls)
-  )
+ProfessorTrashWheel_cleaned = ProfessorTrashWheel[is.na(ProfessorTrashWheel$dumpster)==FALSE,]
 
 MrTrashWheel_cleaned
 ProfessorTrashWheel_cleaned
@@ -62,7 +59,8 @@ ProfessorTrashWheel_cleaned
 ```{r}
 MrTrashWheel_cleaned$whell_type = "MrTrash"
 ProfessorTrashWheel_cleaned$whell_type = "ProfessorTrash"
-ProfessorTrashWheel_cleaned$dumpster =as.character(ProfessorTrashWheel_cleaned$dumpster) 
+MrTrashWheel_cleaned$year =as.integer(MrTrashWheel_cleaned$year) 
+ProfessorTrashWheel_cleaned$sports_balls = NA
 
 cTrashWhell = bind_rows(MrTrashWheel_cleaned,ProfessorTrashWheel_cleaned)
 cTrashWhell
