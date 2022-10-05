@@ -31,7 +31,7 @@ This dataset contains following variables `r colnames(NYC_subway_selected_cols)`
 
 + There are `r nrow(unique(select(NYC_subway_selected_cols,line,station_name)))` distinct stations
 + `r sum(unique(select(NYC_subway_selected_cols,line,station_name,ada))$ada)` stations are ADA compliant.
-+ The proportion is `r sum(NYC_subway_selected_cols$vending=="YES")`:`r sum(NYC_subway_selected_cols$vending=="NO")` equals to `r sum(NYC_subway_selected_cols$vending=="YES")/(sum(NYC_subway_selected_cols$vending=="NO")+sum(NYC_subway_selected_cols$vending=="YES"))`
++ The proportion is `r sum(NYC_subway_selected_cols$vending=="YES")`:`r sum(NYC_subway_selected_cols$vending=="NO")` and is `r sum(NYC_subway_selected_cols$vending=="YES")/(sum(NYC_subway_selected_cols$vending=="NO")+sum(NYC_subway_selected_cols$vending=="YES"))`
 
 ### Problem 2
 
@@ -70,11 +70,82 @@ There are `r nrow(cTrashWhell)` observations with `r ncol(cTrashWhell)` variable
 The key variables contains dumpster, time mark, trash types, whell type etc. The total weight of trash collected by the professor trash wheel is `r sum(cTrashWhell[cTrashWhell$whell_type == 'ProfessorTrash',]$weight_tons)` and total number of sports balls collected by Mr. Trash Wheel in 2020 is `r sum(cTrashWhell[cTrashWhell$whell_type == 'MrTrash' & cTrashWhell$year ==2020 ,]$sports_balls)`.
 
 
+### Problem 3 
 
+#### load and clean the data
 
+```{r}
+pols_month = read_csv('Datasets/pols-month.csv')%>%
+  janitor::clean_names()
+pols_month = separate(pols_month,mon,c("year","month","day"))
 
+monthMap = c('01'='Jan','02'='Feb','03'='Mar','04'='Apr',
+             '05'='May','06'='Jun','07'='Jul','08'='Aug',
+             '09'='Sep','10'='Oct','11'='Nov','12'='Dec')
 
+pols_month$month = monthMap[pols_month$month]
+names(pols_month$month) = NULL
 
+demMap = c('0'= 'gop', '1' = 'dem')
+pols_month$president = demMap[as.character(pols_month$prez_dem)]
+names(pols_month$president) = NULL
 
+pols_month = select(pols_month, -c('prez_dem','prez_gop','day'))
 
+head(pols_month)
+#pols_month cleaned
+
+```
+```{r}
+snp = read_csv('Datasets/snp.csv')%>%
+  janitor::clean_names()
+snp = separate(snp,date,c("month","day","year"))
+
+names(monthMap) = as.integer(names(monthMap))
+
+snp$month = monthMap[snp$month]
+names(snp$month) = NULL
+
+snp = select(snp,-day)
+
+head(snp)
+#snp cleaned
+```
+
+```{r}
+unemployment = read_csv('Datasets/unemployment.csv')
+
+unemployment = 
+  pivot_longer(
+    unemployment, 
+    Jan:Dec,
+    names_to = "month", 
+    values_to = "unemployment")
+
+unemployment = janitor::clean_names(unemployment)
+
+head(unemployment)
+#unemployment cleaned
+```
+
+#### Integrate the 3 datasets
+
+```{r}
+# considering the difference in year:
+pols_month$year = substr(pols_month$year,3,4)
+unemployment$year = substr(unemployment$year,3,4)
+
+# 
+jointSet = merge(pols_month,snp,by = c('year','month'),all = FALSE)
+jointSet = merge(jointSet,unemployment,by = c('year','month'),all = FALSE)
+
+head(jointSet)
+```
+dataset *pols_month* reflects the national politician distribution over the time.By drop 'day','prez_gop','prez_dem' and add 'president'. The dimision is `r dim(pols_month)` after cleaning. 
+
+dataset *snp* discribes the  Standard & Poor’s stock market index (S&P) over the time. After splite the date and drop 'day'. This dataset is `r dim(snp)` after cleaning.
+
+dataset *unemployment* is the percentage of unemployment over the time. The data is regenerated to transfer the month information from variable to value. his dataset is `r dim(unemployment)` after cleaning.
+
+To merge these datasets, the 'year' value in *pols_month* and *unemployment* and taken the last two digits to create shared value with *snp*. I only preserved the intersection of chose indexes(inner?) to avoid NA. This merged dataset record the information such as president party, closing values of the S&P index and unemployment percentage. The record ranges from 1950 to 2015. The dimension is `r dim(jointSet)`
 
